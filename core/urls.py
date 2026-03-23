@@ -1,8 +1,8 @@
-from django.http import HttpResponse
+from django.http import JsonResponse
 
 urlpatterns = [
-    path("", lambda request: HttpResponse("API is running")),
-    
+    path("", lambda request: JsonResponse({"status": "API is running"})),
+
     path("admin/", admin.site.urls),
     path("api/users/", include("app.users.urls")),
     path("api/events/", include("app.events.urls")),
