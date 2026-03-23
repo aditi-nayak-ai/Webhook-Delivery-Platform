@@ -1,7 +1,9 @@
 from django.urls import path
-from . import views
+from django.http import JsonResponse
+
+def test_users(request):
+    return JsonResponse({"message": "Users API working"})
 
 urlpatterns = [
-    # example
-    # path('', views.UserListView.as_view()),
+    path("", test_users),
 ]
