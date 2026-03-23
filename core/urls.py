@@ -1,7 +1,12 @@
-from django.http import JsonResponse
+from django.contrib import admin
+from django.urls import path, include
+from django.http import JsonResponse  
+
+def home(request):
+    return JsonResponse({"status": "API is running"})
 
 urlpatterns = [
-    path("", lambda request: JsonResponse({"status": "API is running"})),
+    path("", home),
 
     path("admin/", admin.site.urls),
     path("api/users/", include("app.users.urls")),
