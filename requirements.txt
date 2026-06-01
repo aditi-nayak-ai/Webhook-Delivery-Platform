@@ -8,3 +8,4 @@ celery
 django-environ
 django-filter
 django-cors-headers
+requests>=2.31
