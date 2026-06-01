@@ -1,7 +1,8 @@
 # app/events/urls.py
-
 from django.urls import path
-
+from .views import EventCreateView
+ 
 urlpatterns = [
-    # add routes later
+    path("", EventCreateView.as_view(), name="event-create"),
 ]
+ 
