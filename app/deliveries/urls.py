@@ -1,5 +1,7 @@
 from django.urls import path
-
+from .views import DeliveryListView
+ 
 urlpatterns = [
-    # add endpoints later
+    path("", DeliveryListView.as_view(), name="delivery-list"),
 ]
+ 
