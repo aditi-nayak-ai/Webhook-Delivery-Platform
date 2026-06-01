@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 
+
 class Webhook(models.Model):
     EVENT_CHOICES = [
         ("payment.success", "Payment Success"),
