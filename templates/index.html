@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webhook Delivery Platform</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+  header { background: #1e293b; padding: 24px 40px; border-bottom: 1px solid #334155; }
+  header h1 { font-size: 24px; color: #38bdf8; }
+  header p { color: #94a3b8; margin-top: 4px; font-size: 14px; }
+  .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 28px; margin-bottom: 24px; }
+  .card h2 { font-size: 16px; color: #38bdf8; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+  .step-badge { display: inline-block; background: #0ea5e9; color: white; border-radius: 50%; width: 24px; height: 24px; text-align: center; line-height: 24px; font-size: 12px; margin-right: 8px; }
+  input, select, textarea { width: 100%; padding: 10px 14px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-size: 14px; margin-bottom: 12px; outline: none; }
+  input:focus, textarea:focus { border-color: #38bdf8; }
+  button { background: #0ea5e9; color: white; border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: background 0.2s; }
+  button:hover { background: #0284c7; }
+  button:disabled { background: #334155; cursor: not-allowed; }
+  .response { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 14px; margin-top: 12px; font-size: 13px; font-family: monospace; white-space: pre-wrap; max-height: 200px; overflow-y: auto; display: none; }
+  .response.success { border-color: #22c55e; color: #86efac; }
+  .response.error { border-color: #ef4444; color: #fca5a5; }
+  .token-display { background: #0f172a; border: 1px solid #22c55e; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-family: monospace; color: #86efac; margin-top: 8px; word-break: break-all; display: none; }
+  .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  .status-dot.connected { background: #22c55e; }
+  .status-dot.disconnected { background: #ef4444; }
+  .arch { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .arch-box { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 6px 12px; font-size: 12px; color: #94a3b8; }
+  .arch-arrow { color: #38bdf8; font-size: 16px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ Webhook Delivery Platform</h1>
+  <p>Event-driven webhook delivery system — Django · Celery · Redis · PostgreSQL · HMAC</p>
+</header>
+
+<div class="container">
+
+  <!-- Architecture -->
+  <div class="card">
+    <h2>Architecture</h2>
+    <div class="arch">
+      <div class="arch-box">Client</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box">Django API</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box">PostgreSQL</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box">Redis Queue</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box">Celery Worker</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box">Webhook Endpoint</div>
+    </div>
+  </div>
+
+  <!-- Step 1: Register -->
+  <div class="card">
+    <h2><span class="step-badge">1</span>Register User</h2>
+    <div class="grid">
+      <input id="reg-username" placeholder="Username" />
+      <input id="reg-email" placeholder="Email" type="email" />
+    </div>
+    <input id="reg-password" placeholder="Password" type="password" />
+    <button onclick="register()">Register</button>
+    <div class="response" id="reg-response"></div>
+  </div>
+
+  <!-- Step 2: Login -->
+  <div class="card">
+    <h2><span class="step-badge">2</span>Get Token</h2>
+    <div class="grid">
+      <input id="login-username" placeholder="Username" />
+      <input id="login-password" placeholder="Password" type="password" />
+    </div>
+    <button onclick="login()">Get JWT Token</button>
+    <div class="token-display" id="token-display"></div>
+    <div class="response" id="login-response"></div>
+  </div>
+
+  <!-- Step 3: Register Webhook -->
+  <div class="card">
+    <h2><span class="step-badge">3</span>Register Webhook</h2>
+    <input id="wh-url" placeholder="Webhook URL (e.g. https://webhook.site/your-id)" />
+    <select id="wh-event">
+      <option value="payment.success">payment.success</option>
+      <option value="user.created">user.created</option>
+    </select>
+    <input id="wh-secret" placeholder="Secret (any string)" />
+    <button onclick="registerWebhook()">Register Webhook</button>
+    <div class="response" id="wh-response"></div>
+  </div>
+
+  <!-- Step 4: Trigger Event -->
+  <div class="card">
+    <h2><span class="step-badge">4</span>Trigger Event</h2>
+    <select id="ev-type">
+      <option value="payment.success">payment.success</option>
+      <option value="user.created">user.created</option>
+    </select>
+    <textarea id="ev-payload" rows="3" placeholder='{"amount": 1000, "currency": "INR"}'></textarea>
+    <button onclick="triggerEvent()">Trigger Event</button>
+    <div class="response" id="ev-response"></div>
+  </div>
+
+  <!-- Step 5: View Deliveries -->
+  <div class="card">
+    <h2><span class="step-badge">5</span>Delivery Logs</h2>
+    <button onclick="getDeliveries()">Fetch Delivery Logs</button>
+    <div class="response" id="del-response"></div>
+  </div>
+
+</div>
+
+<script>
+  const BASE = window.location.origin;
+  let token = null;
+
+  function show(id, data, ok) {
+    const el = document.getElementById(id);
+    el.style.display = 'block';
+    el.className = 'response ' + (ok ? 'success' : 'error');
+    el.textContent = JSON.stringify(data, null, 2);
+  }
+
+  async function register() {
+    const res = await fetch(`${BASE}/api/users/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: document.getElementById('reg-username').value,
+        email: document.getElementById('reg-email').value,
+        password: document.getElementById('reg-password').value,
+      })
+    });
+    const data = await res.json();
+    show('reg-response', data, res.ok);
+  }
+
+  async function login() {
+    const res = await fetch(`${BASE}/api/users/token/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: document.getElementById('login-username').value,
+        password: document.getElementById('login-password').value,
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      token = data.access;
+      const td = document.getElementById('token-display');
+      td.style.display = 'block';
+      td.textContent = '✓ Token saved: ' + token.substring(0, 40) + '...';
+    }
+    show('login-response', data, res.ok);
+  }
+
+  async function registerWebhook() {
+    if (!token) { alert('Get a token first (Step 2)'); return; }
+    const res = await fetch(`${BASE}/api/webhooks/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({
+        url: document.getElementById('wh-url').value,
+        event_type: document.getElementById('wh-event').value,
+        secret: document.getElementById('wh-secret').value,
+      })
+    });
+    const data = await res.json();
+    show('wh-response', data, res.ok);
+  }
+
+  async function triggerEvent() {
+    if (!token) { alert('Get a token first (Step 2)'); return; }
+    let payload;
+    try { payload = JSON.parse(document.getElementById('ev-payload').value); }
+    catch { alert('Payload must be valid JSON'); return; }
+    const res = await fetch(`${BASE}/api/events/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({
+        event_type: document.getElementById('ev-type').value,
+        payload: payload,
+      })
+    });
+    const data = await res.json();
+    show('ev-response', data, res.ok);
+  }
+
+  async function getDeliveries() {
+    if (!token) { alert('Get a token first (Step 2)'); return; }
+    const res = await fetch(`${BASE}/api/deliveries/`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    show('del-response', data, res.ok);
+  }
+</script>
+
+</body>
+</html>
