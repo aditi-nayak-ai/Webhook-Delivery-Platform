@@ -1,25 +1,14 @@
-from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from .models import User
-from .serializers import UserSerializer
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from .views import UserViewSet
  
+router = DefaultRouter()
+router.register(r"", UserViewSet, basename="user")
  
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+urlpatterns = [
+    path("", include(router.urls)),
+    path("token/", TokenObtainPairView.as_view(), name="token-obtain"),
+    path("token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
+]
  
-    def get_permissions(self):
-        # Registration must be open, everything else requires authentication.
-        # The original used AllowAny for all actions — that means any anonymous
-        # caller could list all users, update them, or delete them.
-        if self.action == "create":
-            return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]
- 
-    def get_queryset(self):
-        user = self.request.user
-        # Non-admin users can only see themselves.
-        if user.role == "admin":
-            return User.objects.all()
-        return User.objects.filter(pk=user.pk)
