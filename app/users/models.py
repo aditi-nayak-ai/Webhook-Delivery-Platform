@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+
 class User(AbstractUser):
     ROLE_CHOICES = [
         ("admin", "Admin"),
@@ -11,10 +12,8 @@ class User(AbstractUser):
         max_length=20,
         choices=ROLE_CHOICES,
         default="developer",
-        db_index=True
+        db_index=True,
     )
-
-    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.username
