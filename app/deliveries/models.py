@@ -2,6 +2,7 @@ from django.db import models
 from app.webhooks.models import Webhook
 from app.events.models import Event
 
+
 class Delivery(models.Model):
     STATUS_CHOICES = [
         ("pending", "Pending"),
@@ -21,5 +22,8 @@ class Delivery(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = [("webhook", "event")]
+
     def __str__(self):
-        return f"{self.webhook.url} -> {self.status}"
+        return f"Delivery {self.id} -> {self.status}"
