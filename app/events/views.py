@@ -19,9 +19,13 @@ class EventCreateView(APIView):
 
         event = serializer.save()
 
+        # Scoped to the requesting user — without this, any authenticated
+        # user could trigger deliveries to every other user's registered
+        # webhook endpoints just by guessing an event_type.
         webhooks = Webhook.objects.filter(
             event_type=event.event_type,
             is_active=True,
+            user=request.user,
         )
 
         for webhook in webhooks:
