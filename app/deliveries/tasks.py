@@ -29,11 +29,26 @@ def send_webhook_task(self, webhook_id, event_id):
             timeout=5,
         )
 
-        delivery.status = "success"
         delivery.response_code = response.status_code
         delivery.response_body = response.text[:1000]
 
+        # A 4xx/5xx is a failed delivery, not a successful one — without
+        # this check every HTTP response (including 500s) was recorded as
+        # "success" and the retry path never triggered for them.
+        response.raise_for_status()
+
+        delivery.status = "success"
+
+    except requests.exceptions.HTTPError as exc:
+        # response_code/response_body already captured above from the
+        # actual server response — keep that instead of clobbering it
+        # with the exception's string representation.
+        delivery.status = "failed"
+        raise self.retry(exc=exc, countdown=2 ** delivery.attempt_count)
+
     except Exception as exc:
+        # Network-level failure (timeout, DNS, connection refused) — no
+        # response object exists, so fall back to the exception text.
         delivery.status = "failed"
         delivery.response_body = str(exc)
 
