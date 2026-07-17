@@ -1,13 +1,9 @@
 from django.db import models
 from django.conf import settings
+from core.constants import EVENT_CHOICES
 
 
 class Webhook(models.Model):
-    EVENT_CHOICES = [
-        ("payment.success", "Payment Success"),
-        ("user.created", "User Created"),
-    ]
-
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     url = models.URLField()
     event_type = models.CharField(max_length=100, choices=EVENT_CHOICES)
