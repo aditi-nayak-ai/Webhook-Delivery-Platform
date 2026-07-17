@@ -34,6 +34,8 @@ services:
     # always has schema applied before the app tries to serve requests.
     command: sh -c "python manage.py migrate --noinput && gunicorn core.wsgi:application --bind 0.0.0.0:8000"
     env_file: .env
+    volumes:
+      - .:/app
     depends_on:
       db:
         condition: service_healthy
@@ -47,6 +49,8 @@ services:
     build: .
     command: celery -A core worker --loglevel=info
     env_file: .env
+    volumes:
+      - .:/app
     depends_on:
       db:
         condition: service_healthy
