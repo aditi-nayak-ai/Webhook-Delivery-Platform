@@ -1,6 +1,7 @@
 from django.db import models
-from app.webhooks.models import Webhook
+
 from app.events.models import Event
+from app.webhooks.models import Webhook
 
 
 class Delivery(models.Model):
