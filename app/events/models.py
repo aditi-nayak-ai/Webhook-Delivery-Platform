@@ -1,5 +1,7 @@
 from django.db import models
+
 from core.constants import EVENT_CHOICES
+
 
 class Event(models.Model):
     event_type = models.CharField(max_length=100, choices=EVENT_CHOICES)
