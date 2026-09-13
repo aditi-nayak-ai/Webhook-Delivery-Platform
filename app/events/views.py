@@ -1,11 +1,12 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from .models import Event
-from .serializers import EventSerializer
-from app.webhooks.models import Webhook
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from app.deliveries.tasks import send_webhook_task
+from app.webhooks.models import Webhook
+
+from .serializers import EventSerializer
 
 
 class EventCreateView(APIView):
