@@ -1,6 +1,6 @@
-import os
-from pathlib import Path
 from datetime import timedelta
+from pathlib import Path
+
 import environ
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -11,6 +11,12 @@ environ.Env.read_env(BASE_DIR / ".env")
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = env.bool("DEBUG", default=False)
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
+
+# Dedicated key for encrypting webhook secrets at rest. Falls back to
+# SECRET_KEY if unset (see core/utils.py), but a dedicated key means you
+# can rotate SECRET_KEY (e.g. after a leak) without breaking every stored
+# webhook secret's decryption.
+FIELD_ENCRYPTION_KEY = env("FIELD_ENCRYPTION_KEY", default=None)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -76,6 +82,22 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    # Without this, DeliveryListView.get_queryset() returns every row a
+    # user has ever generated in one response — fine in a demo, a
+    # multi-thousand-row payload (and a slow query) in production.
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 25,
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+    ],
+    # Basic abuse protection on event ingestion / webhook registration.
+    # Tune per-plan limits at the view level later if you need tiers.
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "user": "120/minute",
+    },
 }
 
 SIMPLE_JWT = {
