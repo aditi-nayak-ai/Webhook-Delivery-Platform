@@ -1,20 +1,7 @@
 [tool.ruff]
-target-version = "py311"
-line-length = 100
-exclude = ["**/migrations/*.py"]
+exclude = ["*/migrations/*"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "RUF"]
 ignore = [
-    # RUF012 flags every "mutable" class attribute as a potential shared-
-    # default bug. In Django/DRF that pattern is the framework idiom, not
-    # a bug: Meta.fields, permission_classes, filterset_fields, choices
-    # tuples, etc. are declared once per class and never mutated at
-    # instance level. Enforcing this rule here would mean adding a
-    # ClassVar annotation to nearly every model/serializer/view in the
-    # project for zero real safety benefit.
     "RUF012",
 ]
-
-[tool.ruff.lint.isort]
-known-first-party = ["app", "core"]
