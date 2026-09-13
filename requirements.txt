@@ -10,3 +10,4 @@ django-filter
 django-cors-headers
 requests>=2.31
 whitenoise
+cryptography>=42.0
