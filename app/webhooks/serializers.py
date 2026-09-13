@@ -3,6 +3,9 @@ import socket
 from urllib.parse import urlparse
 
 from rest_framework import serializers
+
+from core.utils import encrypt_secret
+
 from .models import Webhook
 
 
@@ -14,6 +17,23 @@ class WebhookSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             "secret": {"write_only": True},
         }
+
+    def validate_secret(self, value):
+        if len(value) < 16:
+            raise serializers.ValidationError(
+                "Secret must be at least 16 characters to resist brute-forcing "
+                "the HMAC signature."
+            )
+        return value
+
+    def create(self, validated_data):
+        validated_data["secret"] = encrypt_secret(validated_data["secret"])
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if "secret" in validated_data:
+            validated_data["secret"] = encrypt_secret(validated_data["secret"])
+        return super().update(instance, validated_data)
 
     def validate_url(self, value):
         parsed = urlparse(value)
@@ -30,10 +50,10 @@ class WebhookSerializer(serializers.ModelSerializer):
         # localhost, 169.254.169.254 (cloud metadata), and internal 10.x/192.168.x hosts.
         try:
             resolved_ips = socket.getaddrinfo(hostname, None)
-        except socket.gaierror:
-            raise serializers.ValidationError("Could not resolve hostname.")
+        except socket.gaierror as exc:
+            raise serializers.ValidationError("Could not resolve hostname.") from exc
 
-        for family, _, _, _, sockaddr in resolved_ips:
+        for _family, _, _, _, sockaddr in resolved_ips:
             ip = ipaddress.ip_address(sockaddr[0])
             if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
                 raise serializers.ValidationError(
