@@ -74,4 +74,4 @@ def _safe_retry(task, delivery, exc):
             "Delivery %s exhausted retries after %s attempts: %s",
             delivery.id, delivery.attempt_count, exc,
         )
-EOF
+
