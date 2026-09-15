@@ -130,7 +130,7 @@
   }
 
   async function register() {
-    const res = await fetch(`${BASE}/api/users/token/`, {
+    const res = await fetch(`${BASE}/api/users/`, {  
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
