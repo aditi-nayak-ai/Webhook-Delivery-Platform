@@ -19,6 +19,16 @@ from app.deliveries.tasks import send_webhook_task
 from app.events.models import Event
 from app.users.models import User
 from app.webhooks.models import Webhook
+from core.utils import encrypt_secret
+
+# The plaintext secret used everywhere below. webhook.secret on the model
+# holds encrypt_secret(PLAINTEXT_SECRET) -- the ciphertext -- because
+# send_webhook_task calls decrypt_secret(webhook.secret) as its very
+# first step (see tasks.py); a plaintext value there fails immediately,
+# before any of the actual scenario under test (success, HTTP error,
+# etc.) ever runs. Tests that need the real secret to compute an
+# expected HMAC signature use this constant, never webhook.secret.
+PLAINTEXT_SECRET = "a-sufficiently-long-plaintext-secret"
 
 
 @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_TASK_EAGER_PROPAGATES=True)
@@ -29,7 +39,7 @@ class SendWebhookTaskTests(TestCase):
             user=self.user,
             url="https://example.com/hook",
             event_type="payment.success",
-            secret="test-secret",
+            secret=encrypt_secret(PLAINTEXT_SECRET),
         )
         self.event = Event.objects.create(
             event_type="payment.success",
@@ -54,7 +64,9 @@ class SendWebhookTaskTests(TestCase):
         """The receiving service verifies this signature -- it must match
         exactly what core.utils.generate_signature would independently
         compute for the same payload+secret, or every real integration
-        would silently reject every delivery."""
+        would silently reject every delivery. Uses PLAINTEXT_SECRET, not
+        webhook.secret (which holds ciphertext) -- tasks.py signs with
+        the decrypted value, so the test must too."""
         mock_post.return_value = Mock(status_code=200, text="OK")
         mock_post.return_value.raise_for_status = Mock()
 
@@ -62,7 +74,7 @@ class SendWebhookTaskTests(TestCase):
 
         sent_headers = mock_post.call_args.kwargs["headers"]
         expected_signature = hmac.new(
-            key=self.webhook.secret.encode(),
+            key=PLAINTEXT_SECRET.encode(),
             msg=json.dumps(self.event.payload, separators=(",", ":")).encode(),
             digestmod=hashlib.sha256,
         ).hexdigest()
@@ -123,7 +135,8 @@ class SendWebhookTaskTests(TestCase):
         """Simulates the same (webhook, event) pair being processed
         across multiple retry cycles -- get_or_create means the same
         Delivery row is reused, and attempt_count must accumulate rather
-        than resetting each time."""
+        than resetting each time. Both calls succeed (no retry loop
+        triggered), so attempt_count increments by exactly 1 per call."""
         mock_post.return_value = Mock(status_code=200, text="OK")
         mock_post.return_value.raise_for_status = Mock()
 
