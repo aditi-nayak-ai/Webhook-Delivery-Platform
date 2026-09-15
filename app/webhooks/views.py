@@ -1,5 +1,4 @@
 from rest_framework import permissions, viewsets
-
 from .models import Webhook
 from .serializers import WebhookSerializer
 
