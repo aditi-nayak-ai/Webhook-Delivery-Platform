@@ -52,6 +52,11 @@ class UserRegistrationTests(APITestCase):
 
 
 class UserQuerysetScopingTests(APITestCase):
+    """List responses are paginated (see REST_FRAMEWORK.DEFAULT_PAGINATION_CLASS
+    in settings.py) -- every list endpoint returns {"count", "next",
+    "previous", "results": [...]}, not a bare list. Tests below read
+    response.data["results"], not response.data directly."""
+
     def setUp(self):
         self.developer = User.objects.create_user(
             username="dev", password="pass12345", role="developer"
@@ -67,14 +72,14 @@ class UserQuerysetScopingTests(APITestCase):
         self.client.force_authenticate(user=self.developer)
         response = self.client.get("/api/users/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        usernames = [u["username"] for u in response.data]
+        usernames = [u["username"] for u in response.data["results"]]
         self.assertEqual(usernames, ["dev"])
 
     def test_admin_sees_every_user(self):
         self.client.force_authenticate(user=self.admin)
         response = self.client.get("/api/users/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        usernames = {u["username"] for u in response.data}
+        usernames = {u["username"] for u in response.data["results"]}
         self.assertEqual(usernames, {"dev", "dev2", "admin_user"})
 
     def test_unauthenticated_list_request_is_rejected(self):
