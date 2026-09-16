@@ -68,7 +68,7 @@
       <input id="reg-email" placeholder="Email" type="email" />
     </div>
     <input id="reg-password" placeholder="Password" type="password" />
-    <button onclick="register()">Register</button>
+    <button onclick="register()" id="reg-btn">Register</button>
     <div class="response" id="reg-response"></div>
   </div>
 
@@ -130,17 +130,29 @@
   }
 
   async function register() {
-    const res = await fetch(`${BASE}/api/users/`, {  
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: document.getElementById('reg-username').value,
-        email: document.getElementById('reg-email').value,
-        password: document.getElementById('reg-password').value,
-      })
-    });
-    const data = await res.json();
-    show('reg-response', data, res.ok);
+    // Disabling the button for the duration of the request prevents a
+    // fast double-click from firing two separate register() calls --
+    // the first succeeds, the second then fails with "username already
+    // exists" (since the first call just created it), and whichever
+    // response renders last overwrites the other, making a successful
+    // registration look like it failed.
+    const btn = document.getElementById('reg-btn');
+    btn.disabled = true;
+    try {
+      const res = await fetch(`${BASE}/api/users/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: document.getElementById('reg-username').value,
+          email: document.getElementById('reg-email').value,
+          password: document.getElementById('reg-password').value,
+        })
+      });
+      const data = await res.json();
+      show('reg-response', data, res.ok);
+    } finally {
+      btn.disabled = false;
+    }
   }
 
   async function login() {
