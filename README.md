@@ -188,8 +188,11 @@ Trigger Event
 - Monitoring & alerting
 
 ### Screenshot
-<img width="1920" height="1080" alt="Screenshot (383)" src="https://github.com/user-attachments/assets/b3fb43e7-df2e-4283-a3e9-d77c6941b252" />
-<img width="1920" height="1080" alt="Screenshot (384)" src="https://github.com/user-attachments/assets/4b354b3b-ebde-4394-8540-0a4a14a5ae77" />
-<img width="1920" height="1080" alt="Screenshot (385)" src="https://github.com/user-attachments/assets/a66bb4fd-81a2-4b93-864a-6c9716019e9c" />
+
+<img width="1920" height="1080" alt="Screenshot (386)" src="https://github.com/user-attachments/assets/338c899f-aeb9-48ea-a40c-b706ba21207b" />
+
+<img width="1920" height="1080" alt="Screenshot (391)" src="https://github.com/user-attachments/assets/e58d57a4-0b1f-40b1-b27f-b0a59b8b15ce" />
+
+<img width="1920" height="1080" alt="Screenshot (390)" src="https://github.com/user-attachments/assets/902429c9-8f5a-4207-8c63-6ead97f4f660" />
 
 ### 👩‍💻 Author - Aditi Nayak
